@@ -33,74 +33,80 @@
   .modal .box .row{margin-bottom:12px}
   .modal .box .row label{display:block;margin-bottom:4px;font-weight:600}
   .modal .box .row input{width:100%;padding:10px;border:2px solid #e6e6f0;border-radius:8px;box-sizing:border-box}
-  .share-section{background:#e8f4f8;padding:16px;margin:16px 24px;border-radius:8px;border-left:4px solid #17a2b8}
-  .share-section h3{margin:0 0 8px;color:#0c5460}
+  .share-section{background:#d4edda;padding:16px;margin:16px 24px;border-radius:8px;border-left:4px solid #28a745}
+  .share-section h3{margin:0 0 8px;color:#155724}
   .share-section p{margin:4px 0;font-size:0.9em;color:#495057}
   .url-box{background:#fff;padding:8px 12px;border-radius:4px;border:1px solid #ced4da;word-break:break-all;font-family:monospace;font-size:0.9em}
   .alert{padding:12px;margin:16px 24px;border-radius:8px}
   .alert-success{background:#d4edda;border:1px solid #c3e6cb;color:#155724}
   .alert-warning{background:#fff3cd;border:1px solid #ffeaa7;color:#856404}
-  .backup-section{background:#f8f9fa;padding:16px;margin:16px 24px;border-radius:8px}
-  #fileInput{display:none}
+  .alert-error{background:#f8d7da;border:1px solid #f5c6cb;color:#721c24}
+  .connection-status{background:#17a2b8;padding:8px 16px;margin:16px 24px;border-radius:8px;color:#fff;text-align:center;font-weight:600}
+  .connection-status.offline{background:#dc3545}
+  .connection-status.online{background:#28a745}
   .sortable{cursor:pointer;user-select:none}
   .sortable:hover{background:rgba(255,255,255,0.1)}
+  .firebase-info{background:#e3f2fd;padding:16px;margin:16px 24px;border-radius:8px;border-left:4px solid #2196f3}
+  .firebase-info h3{margin:0 0 8px;color:#0d47a1}
+  .loading{display:none;text-align:center;padding:20px;color:#666}
+  .loading.show{display:block}
 </style>
 </head>
 <body>
   <div class="container">
     <div class="header">
       <h1>📊 Sistema de Gestão de Líderes e Votos</h1>
-      <p>Organize e acompanhe os votos por cidade - Sistema Compartilhável</p>
+      <p>Sistema Compartilhado em Tempo Real - Powered by Firebase 🔥</p>
     </div>
 
-    <div class="share-section">
-      <h3>🔗 Compartilhamento</h3>
-      <p><strong>Para compartilhar:</strong> Copie a URL atual desta página e envie para outras pessoas. Todos os dados ficam sincronizados automaticamente!</p>
+    <div class="connection-status" id="connectionStatus">
+      🔄 Conectando ao Firebase...
+    </div>
+
+    <div class="firebase-info">
+      <h3>🔥 Sistema Compartilhado Ativo</h3>
+      <p><strong>✅ Dados sincronizados em tempo real:</strong> Todas as alterações aparecem instantaneamente para todos os usuários</p>
+      <p><strong>🔗 Compartilhável:</strong> Envie este link para qualquer pessoa usar o sistema</p>
       <div class="url-box" id="shareUrl">Carregando URL...</div>
-      <p><small>💡 <strong>Dica:</strong> Marque esta página nos favoritos para acesso rápido</small></p>
     </div>
 
     <div class="controls">
       <div>
         <label for="liderNome">Nome do Líder</label>
-        <input id="liderNome" type="text" placeholder="Ex.: Ana Paula">
+        <input id="liderNome" type="text" placeholder="Ex.: Ana Paula" disabled>
       </div>
       <div>
         <label for="cidade">Cidade</label>
-        <input id="cidade" type="text" placeholder="Ex.: São José do Rio Preto">
+        <input id="cidade" type="text" placeholder="Ex.: São José do Rio Preto" disabled>
       </div>
       <div>
         <label for="votos">Número de Votos</label>
-        <input id="votos" type="number" min="0" value="0">
+        <input id="votos" type="number" min="0" value="0" disabled>
       </div>
       <div style="display:flex;gap:8px;align-items:flex-end">
-        <button id="btnAdicionar" class="btn btn-primary">➕ Adicionar Líder</button>
+        <button id="btnAdicionar" class="btn btn-primary" disabled>➕ Adicionar Líder</button>
         <button id="btnLimpar" class="btn btn-secondary">🔄 Limpar</button>
       </div>
     </div>
 
     <div class="stats">
-      <div class="card"><h4>Total de Líderes</h4><div class="num" id="totalLideres">0</div></div>
-      <div class="card"><h4>Total de Votos</h4><div class="num" id="totalVotos">0</div></div>
-      <div class="card"><h4>Cidades Cadastradas</h4><div class="num" id="totalCidades">0</div></div>
-      <div class="card"><h4>Média de Votos</h4><div class="num" id="mediaVotos">0</div></div>
+      <div class="card"><h4>Total de Líderes</h4><div class="num" id="totalLideres">-</div></div>
+      <div class="card"><h4>Total de Votos</h4><div class="num" id="totalVotos">-</div></div>
+      <div class="card"><h4>Cidades Cadastradas</h4><div class="num" id="totalCidades">-</div></div>
+      <div class="card"><h4>Média de Votos</h4><div class="num" id="mediaVotos">-</div></div>
     </div>
 
     <div class="searchbar">
-      <input id="searchInput" type="text" placeholder="🔎 Buscar por líder ou cidade..." onkeyup="filtrarTabela()">
-      <select id="filterCity" onchange="filtrarTabela()">
+      <input id="searchInput" type="text" placeholder="🔎 Buscar por líder ou cidade...">
+      <select id="filterCity">
         <option value="">Todas as cidades</option>
       </select>
       <button id="btnExportar" class="btn btn-success">📁 Exportar JSON</button>
-      <button id="btnImportar" class="btn btn-primary">📥 Importar Dados</button>
-      <input type="file" id="fileInput" accept=".json" style="display:none">
     </div>
 
-    <div class="backup-section">
-      <h4>💾 Backup Automático</h4>
-      <p>Os dados são salvos automaticamente no seu navegador. Use as opções de exportar/importar para fazer backup ou compartilhar entre dispositivos.</p>
-      <button id="btnBackup" class="btn btn-secondary" style="margin-top:8px">💾 Fazer Backup Agora</button>
-      <span id="backupStatus" style="margin-left:12px;color:#666;font-size:0.9em"></span>
+    <div class="loading" id="loadingIndicator">
+      <h3>🔄 Carregando dados...</h3>
+      <p>Conectando ao Firebase e sincronizando informações</p>
     </div>
 
     <div class="table-wrap">
@@ -120,6 +126,7 @@
       <div id="emptyState" style="text-align:center;padding:32px;color:#888;display:none">
         <h3>📝 Nenhum líder cadastrado ainda</h3>
         <p>Comece adicionando seu primeiro líder usando o formulário acima</p>
+        <p><small>💡 Os dados são compartilhados em tempo real com todos os usuários</small></p>
       </div>
     </div>
   </div>
@@ -159,79 +166,248 @@
     </div>
   </div>
 
-<script>
+<!-- Firebase SDKs -->
+<script type="module">
+  // Import Firebase modules
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+  import { 
+    getFirestore, 
+    collection, 
+    addDoc, 
+    getDocs, 
+    doc, 
+    updateDoc, 
+    deleteDoc, 
+    onSnapshot,
+    orderBy,
+    query 
+  } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+  // Firebase configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyCaWmpEAfLH_x4lqGiHmOCjTgAnlf-VabQ",
+    authDomain: "sistema-gestao-lideres.firebaseapp.com",
+    projectId: "sistema-gestao-lideres",
+    storageBucket: "sistema-gestao-lideres.firebasestorage.app",
+    messagingSenderId: "831576985310",
+    appId: "1:831576985310:web:7be43afa4d69a9d0d6fc4f"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
   // Estado da aplicação
   let lideres = [];
   let editandoId = null;
   let ordemAtual = { coluna: null, crescente: true };
   let confirmCallback = null;
+  let unsubscribe = null;
 
-  // Chave para armazenamento local
-  const STORAGE_KEY = 'sistema_lideres_votos';
+  // Coleção do Firestore
+  const lideresCollection = collection(db, 'lideres');
 
   // --------- Inicialização ---------
   document.addEventListener('DOMContentLoaded', () => {
-    carregarDados();
     configurarEventos();
-    renderizarTabela();
     mostrarUrlCompartilhamento();
-    verificarParametrosUrl();
+    conectarFirebase();
   });
 
+  // --------- Conexão Firebase ---------
+  function conectarFirebase() {
+    mostrarCarregando(true);
+    atualizarStatusConexao('Conectando ao Firebase...');
+    
+    try {
+      // Configurar listener em tempo real
+      const q = query(lideresCollection, orderBy('timestamp', 'desc'));
+      
+      unsubscribe = onSnapshot(q, (snapshot) => {
+        lideres = [];
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          lideres.push({
+            id: doc.id,
+            nome: data.nome,
+            cidade: data.cidade,
+            votos: data.votos || 0,
+            data: data.data || formatarData(new Date()),
+            timestamp: data.timestamp
+          });
+        });
+        
+        renderizarTabela();
+        habilitarInterface();
+        mostrarCarregando(false);
+        atualizarStatusConexao('🟢 Conectado - Dados sincronizados em tempo real', 'online');
+      }, (error) => {
+        console.error('Erro ao escutar mudanças:', error);
+        atualizarStatusConexao('🔴 Erro de conexão', 'offline');
+        mostrarMensagem('❌ Erro ao conectar com Firebase: ' + error.message, 'error');
+        mostrarCarregando(false);
+      });
+      
+    } catch (error) {
+      console.error('Erro ao conectar Firebase:', error);
+      atualizarStatusConexao('🔴 Falha na conexão', 'offline');
+      mostrarMensagem('❌ Erro ao inicializar Firebase: ' + error.message, 'error');
+      mostrarCarregando(false);
+    }
+  }
+
+  function atualizarStatusConexao(mensagem, status = '') {
+    const elemento = document.getElementById('connectionStatus');
+    elemento.textContent = mensagem;
+    elemento.className = `connection-status ${status}`;
+  }
+
+  function habilitarInterface() {
+    document.getElementById('liderNome').disabled = false;
+    document.getElementById('cidade').disabled = false;
+    document.getElementById('votos').disabled = false;
+    document.getElementById('btnAdicionar').disabled = false;
+  }
+
+  function mostrarCarregando(show) {
+    const loading = document.getElementById('loadingIndicator');
+    if (show) {
+      loading.classList.add('show');
+    } else {
+      loading.classList.remove('show');
+    }
+  }
+
+  // --------- Event Listeners ---------
   function configurarEventos() {
-    // Botões principais
     document.getElementById('btnAdicionar').addEventListener('click', adicionarLider);
     document.getElementById('btnLimpar').addEventListener('click', limparFormulario);
     document.getElementById('btnExportar').addEventListener('click', exportarDados);
-    document.getElementById('btnImportar').addEventListener('click', () => document.getElementById('fileInput').click());
-    document.getElementById('btnBackup').addEventListener('click', fazerBackup);
     
-    // Upload de arquivo
-    document.getElementById('fileInput').addEventListener('change', importarDados);
-    
-    // Enter nos campos de input
+    // Enter nos campos
     ['liderNome', 'cidade', 'votos'].forEach(id => {
       document.getElementById(id).addEventListener('keypress', (e) => {
         if (e.key === 'Enter') adicionarLider();
       });
     });
 
-    // Ordenação da tabela
+    // Busca e filtros
+    document.getElementById('searchInput').addEventListener('input', filtrarTabela);
+    document.getElementById('filterCity').addEventListener('change', filtrarTabela);
+
+    // Ordenação
     document.querySelectorAll('th.sortable').forEach(th => {
       th.addEventListener('click', () => ordenarTabela(th.dataset.coluna));
     });
   }
 
-  // --------- Gerenciamento de Dados ---------
-  function carregarDados() {
+  // --------- CRUD Operations ---------
+  async function adicionarLider() {
+    const nome = document.getElementById('liderNome').value.trim();
+    const cidade = document.getElementById('cidade').value.trim();
+    const votos = parseInt(document.getElementById('votos').value) || 0;
+
+    if (!validarCampos(nome, cidade)) return;
+
     try {
-      const dados = localStorage.getItem(STORAGE_KEY);
-      if (dados) {
-        lideres = JSON.parse(dados);
-        // Garantir que todos os líderes tenham um ID
-        lideres.forEach((lider, index) => {
-          if (!lider.id) {
-            lider.id = Date.now() + index;
-          }
-        });
+      const novoLider = {
+        nome: nome,
+        cidade: cidade,
+        votos: votos,
+        data: formatarData(new Date()),
+        timestamp: new Date()
+      };
+
+      await addDoc(lideresCollection, novoLider);
+      limparFormulario();
+      mostrarMensagem(`✅ Líder "${nome}" adicionado com sucesso!`, 'success');
+      
+    } catch (error) {
+      console.error('Erro ao adicionar líder:', error);
+      mostrarMensagem('❌ Erro ao adicionar líder: ' + error.message, 'error');
+    }
+  }
+
+  async function editarLider(id) {
+    const lider = lideres.find(l => l.id === id);
+    if (!lider) return;
+
+    editandoId = id;
+    document.getElementById('editNome').value = lider.nome;
+    document.getElementById('editCidade').value = lider.cidade;
+    document.getElementById('editVotos').value = lider.votos || 0;
+    document.getElementById('editModal').style.display = 'flex';
+    
+    setTimeout(() => document.getElementById('editNome').focus(), 100);
+  }
+
+  async function salvarEdicao() {
+    const nome = document.getElementById('editNome').value.trim();
+    const cidade = document.getElementById('editCidade').value.trim();
+    const votos = parseInt(document.getElementById('editVotos').value) || 0;
+
+    if (!validarCampos(nome, cidade)) return;
+
+    try {
+      const liderRef = doc(db, 'lideres', editandoId);
+      await updateDoc(liderRef, {
+        nome: nome,
+        cidade: cidade,
+        votos: votos,
+        timestamp: new Date()
+      });
+
+      fecharModal();
+      mostrarMensagem(`✅ Líder "${nome}" atualizado com sucesso!`, 'success');
+      
+    } catch (error) {
+      console.error('Erro ao atualizar líder:', error);
+      mostrarMensagem('❌ Erro ao atualizar líder: ' + error.message, 'error');
+    }
+  }
+
+  async function deletarLider(id) {
+    const lider = lideres.find(l => l.id === id);
+    if (!lider) return;
+
+    confirmarAcao(
+      'Excluir Líder',
+      `Tem certeza que deseja excluir "${lider.nome}" de ${lider.cidade}?`,
+      async () => {
+        try {
+          await deleteDoc(doc(db, 'lideres', id));
+          mostrarMensagem(`✅ Líder "${lider.nome}" excluído com sucesso!`, 'success');
+        } catch (error) {
+          console.error('Erro ao excluir líder:', error);
+          mostrarMensagem('❌ Erro ao excluir líder: ' + error.message, 'error');
+        }
       }
-    } catch (error) {
-      console.error('Erro ao carregar dados:', error);
-      lideres = [];
-    }
+    );
   }
 
-  function salvarDados() {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(lideres));
-      mostrarMensagem('✅ Dados salvos automaticamente!', 'success');
-    } catch (error) {
-      console.error('Erro ao salvar dados:', error);
-      mostrarMensagem('❌ Erro ao salvar dados. Espaço insuficiente?', 'warning');
+  // --------- Validação ---------
+  function validarCampos(nome, cidade) {
+    if (!nome) {
+      mostrarMensagem('❌ Por favor, informe o nome do líder', 'warning');
+      document.getElementById('liderNome').focus();
+      return false;
     }
+
+    if (!cidade) {
+      mostrarMensagem('❌ Por favor, informe a cidade', 'warning');
+      document.getElementById('cidade').focus();
+      return false;
+    }
+
+    if (nome.length < 2) {
+      mostrarMensagem('❌ Nome deve ter pelo menos 2 caracteres', 'warning');
+      return false;
+    }
+
+    return true;
   }
 
-  // --------- Renderização da Interface ---------
+  // --------- Renderização ---------
   function renderizarTabela() {
     const tbody = document.getElementById('tabelaCorpo');
     const empty = document.getElementById('emptyState');
@@ -244,15 +420,15 @@
       empty.style.display = 'none';
       tbody.innerHTML = dados.map(l => `
         <tr>
-          <td><strong>#${l.id}</strong></td>
+          <td><strong>#${l.id.substring(0, 8)}</strong></td>
           <td><strong style="color:#333">${escapeHtml(l.nome)}</strong></td>
           <td><span style="color:#666">${escapeHtml(l.cidade)}</span></td>
           <td style="color:#5b6cee;font-weight:700;font-size:1.1em">${formatarNumero(l.votos||0)}</td>
           <td style="color:#666;font-size:0.9em">${l.data||'N/A'}</td>
           <td>
             <div class="actions">
-              <button class="btn btn-secondary" onclick="editarLider(${l.id})" title="Editar líder">✏️</button>
-              <button class="btn btn-danger" onclick="deletarLider(${l.id})" title="Excluir líder">🗑️</button>
+              <button class="btn btn-secondary" onclick="editarLider('${l.id}')" title="Editar líder">✏️</button>
+              <button class="btn btn-danger" onclick="deletarLider('${l.id}')" title="Excluir líder">🗑️</button>
             </div>
           </td>
         </tr>
@@ -292,135 +468,7 @@
     select.value = valorAtual;
   }
 
-  // --------- CRUD Operations ---------
-  function adicionarLider() {
-    const nome = document.getElementById('liderNome').value.trim();
-    const cidade = document.getElementById('cidade').value.trim();
-    const votos = parseInt(document.getElementById('votos').value) || 0;
-
-    // Validação
-    if (!nome) {
-      mostrarMensagem('❌ Por favor, informe o nome do líder', 'warning');
-      document.getElementById('liderNome').focus();
-      return;
-    }
-
-    if (!cidade) {
-      mostrarMensagem('❌ Por favor, informe a cidade', 'warning');
-      document.getElementById('cidade').focus();
-      return;
-    }
-
-    // Verificar duplicatas
-    const duplicata = lideres.find(l => 
-      l.nome.toLowerCase() === nome.toLowerCase() && 
-      l.cidade.toLowerCase() === cidade.toLowerCase()
-    );
-
-    if (duplicata) {
-      mostrarMensagem('⚠️ Já existe um líder com esse nome nesta cidade', 'warning');
-      return;
-    }
-
-    // Criar novo líder
-    const novoLider = {
-      id: Date.now(),
-      nome: nome,
-      cidade: cidade,
-      votos: votos,
-      data: new Date().toLocaleDateString('pt-BR')
-    };
-
-    lideres.unshift(novoLider); // Adiciona no início para aparecer primeiro
-    salvarDados();
-    renderizarTabela();
-    limparFormulario();
-    
-    mostrarMensagem(`✅ Líder "${nome}" adicionado com sucesso!`, 'success');
-  }
-
-  function editarLider(id) {
-    const lider = lideres.find(l => l.id === id);
-    if (!lider) {
-      mostrarMensagem('❌ Líder não encontrado', 'warning');
-      return;
-    }
-
-    editandoId = id;
-    document.getElementById('editNome').value = lider.nome;
-    document.getElementById('editCidade').value = lider.cidade;
-    document.getElementById('editVotos').value = lider.votos || 0;
-    document.getElementById('editModal').style.display = 'flex';
-    
-    // Focar no primeiro campo
-    setTimeout(() => document.getElementById('editNome').focus(), 100);
-  }
-
-  function salvarEdicao() {
-    const nome = document.getElementById('editNome').value.trim();
-    const cidade = document.getElementById('editCidade').value.trim();
-    const votos = parseInt(document.getElementById('editVotos').value) || 0;
-
-    if (!nome || !cidade) {
-      mostrarMensagem('❌ Nome e cidade são obrigatórios', 'warning');
-      return;
-    }
-
-    // Verificar duplicatas (exceto o próprio registro)
-    const duplicata = lideres.find(l => 
-      l.id !== editandoId &&
-      l.nome.toLowerCase() === nome.toLowerCase() && 
-      l.cidade.toLowerCase() === cidade.toLowerCase()
-    );
-
-    if (duplicata) {
-      mostrarMensagem('⚠️ Já existe outro líder com esse nome nesta cidade', 'warning');
-      return;
-    }
-
-    const lider = lideres.find(l => l.id === editandoId);
-    if (lider) {
-      lider.nome = nome;
-      lider.cidade = cidade;
-      lider.votos = votos;
-      
-      salvarDados();
-      renderizarTabela();
-      fecharModal();
-      
-      mostrarMensagem(`✅ Líder "${nome}" atualizado com sucesso!`, 'success');
-    }
-  }
-
-  function deletarLider(id) {
-    const lider = lideres.find(l => l.id === id);
-    if (!lider) return;
-
-    confirmarAcao(
-      'Excluir Líder',
-      `Tem certeza que deseja excluir "${lider.nome}" de ${lider.cidade}?`,
-      () => {
-        lideres = lideres.filter(l => l.id !== id);
-        salvarDados();
-        renderizarTabela();
-        mostrarMensagem(`✅ Líder "${lider.nome}" excluído com sucesso!`, 'success');
-      }
-    );
-  }
-
-  // --------- Funções Auxiliares ---------
-  function limparFormulario() {
-    document.getElementById('liderNome').value = '';
-    document.getElementById('cidade').value = '';
-    document.getElementById('votos').value = '0';
-    document.getElementById('liderNome').focus();
-  }
-
-  function fecharModal() {
-    document.getElementById('editModal').style.display = 'none';
-    editandoId = null;
-  }
-
+  // --------- Filtros e Ordenação ---------
   function obterDadosFiltrados() {
     const busca = (document.getElementById('searchInput')?.value || '').toLowerCase();
     const cidadeFiltro = (document.getElementById('filterCity')?.value || '').toLowerCase();
@@ -428,13 +476,12 @@
     return lideres.filter(lider => {
       const correspondeNome = !busca || lider.nome.toLowerCase().includes(busca);
       const correspondeCidade = !busca || lider.cidade.toLowerCase().includes(busca);
-      const correspondeIdadeade = !cidadeFiltro || lider.cidade.toLowerCase() === cidadeFiltro;
+      const correspondeFiltroCidade = !cidadeFiltro || lider.cidade.toLowerCase() === cidadeFiltro;
       
-      return (correspondeNome || correspondeCidade) && correspondeIdadeade;
+      return (correspondeNome || correspondeCidade) && correspondeFiltroCidade;
     });
   }
 
-  // --------- Filtros e Ordenação ---------
   function filtrarTabela() {
     renderizarTabela();
   }
@@ -451,11 +498,10 @@
       let valorA = a[coluna];
       let valorB = b[coluna];
 
-      // Tratamento específico por tipo de coluna
       if (coluna === 'nome' || coluna === 'cidade') {
         valorA = (valorA || '').toLowerCase();
         valorB = (valorB || '').toLowerCase();
-      } else if (coluna === 'votos' || coluna === 'id') {
+      } else if (coluna === 'votos') {
         valorA = Number(valorA) || 0;
         valorB = Number(valorB) || 0;
       } else if (coluna === 'data') {
@@ -471,188 +517,52 @@
     });
 
     renderizarTabela();
-    
-    // Atualizar indicador visual da ordenação
-    document.querySelectorAll('th.sortable').forEach(th => {
-      th.style.backgroundColor = '';
-    });
-    
-    const thAtivo = document.querySelector(`th[data-coluna="${coluna}"]`);
-    if (thAtivo) {
-      thAtivo.style.backgroundColor = 'rgba(255,255,255,0.2)';
-    }
-  }
-
-  // --------- Import/Export ---------
-  function exportarDados() {
-    try {
-      const dados = {
-        versao: '2.0',
-        exportadoEm: new Date().toISOString(),
-        totalRegistros: lideres.length,
-        lideres: lideres
-      };
-
-      const blob = new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `lideres_votos_${new Date().toISOString().split('T')[0]}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-
-      mostrarMensagem('✅ Dados exportados com sucesso!', 'success');
-    } catch (error) {
-      console.error('Erro ao exportar:', error);
-      mostrarMensagem('❌ Erro ao exportar dados', 'warning');
-    }
-  }
-
-  function importarDados(event) {
-    const arquivo = event.target.files[0];
-    if (!arquivo) return;
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const dados = JSON.parse(e.target.result);
-        let lideresImportados = [];
-
-        // Suporte a diferentes formatos
-        if (dados.lideres && Array.isArray(dados.lideres)) {
-          lideresImportados = dados.lideres;
-        } else if (Array.isArray(dados)) {
-          lideresImportados = dados;
-        } else {
-          throw new Error('Formato de arquivo inválido');
-        }
-
-        // Validar e limpar dados
-        lideresImportados = lideresImportados.filter(lider => 
-          lider.nome && lider.cidade
-        ).map(lider => ({
-          id: lider.id || Date.now() + Math.random(),
-          nome: String(lider.nome).trim(),
-          cidade: String(lider.cidade).trim(),
-          votos: Number(lider.votos) || 0,
-          data: lider.data || new Date().toLocaleDateString('pt-BR')
-        }));
-
-        if (lideresImportados.length === 0) {
-          mostrarMensagem('⚠️ Nenhum dado válido encontrado no arquivo', 'warning');
-          return;
-        }
-
-        confirmarAcao(
-          'Importar Dados',
-          `Foram encontrados ${lideresImportados.length} registros válidos. Deseja substituir todos os dados atuais?`,
-          () => {
-            lideres = lideresImportados;
-            salvarDados();
-            renderizarTabela();
-            mostrarMensagem(`✅ ${lideresImportados.length} registros importados com sucesso!`, 'success');
-          }
-        );
-
-      } catch (error) {
-        console.error('Erro ao importar:', error);
-        mostrarMensagem('❌ Erro ao ler arquivo. Verifique se é um arquivo JSON válido.', 'warning');
-      }
-    };
-
-    reader.readAsText(arquivo);
-    event.target.value = ''; // Limpar input
-  }
-
-  // --------- Compartilhamento ---------
-  function mostrarUrlCompartilhamento() {
-    const url = window.location.href;
-    document.getElementById('shareUrl').textContent = url;
-  }
-
-  function verificarParametrosUrl() {
-    const params = new URLSearchParams(window.location.search);
-    if (params.has('dados')) {
-      try {
-        const dadosComprimidos = params.get('dados');
-        const dadosJson = atob(dadosComprimidos);
-        const dadosImportados = JSON.parse(dadosJson);
-        
-        if (Array.isArray(dadosImportados) && dadosImportados.length > 0) {
-          lideres = dadosImportados;
-          salvarDados();
-          renderizarTabela();
-          mostrarMensagem('✅ Dados compartilhados carregados com sucesso!', 'success');
-        }
-      } catch (error) {
-        console.error('Erro ao carregar dados da URL:', error);
-      }
-    }
-  }
-
-  // --------- Backup ---------
-  function fazerBackup() {
-    const timestamp = new Date().toLocaleString('pt-BR');
-    const status = document.getElementById('backupStatus');
-    
-    try {
-      // Salva uma cópia extra no localStorage
-      const backupKey = `${STORAGE_KEY}_backup_${Date.now()}`;
-      localStorage.setItem(backupKey, JSON.stringify({
-        timestamp,
-        dados: lideres
-      }));
-      
-      status.textContent = `✅ Backup realizado em ${timestamp}`;
-      status.style.color = '#28a745';
-      
-      // Limpar backups antigos (manter apenas os últimos 5)
-      const keys = Object.keys(localStorage).filter(k => k.includes(`${STORAGE_KEY}_backup_`));
-      if (keys.length > 5) {
-        keys.sort().slice(0, keys.length - 5).forEach(key => {
-          localStorage.removeItem(key);
-        });
-      }
-      
-    } catch (error) {
-      status.textContent = '❌ Erro ao fazer backup';
-      status.style.color = '#dc3545';
-    }
   }
 
   // --------- Utility Functions ---------
-  function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+  function limparFormulario() {
+    document.getElementById('liderNome').value = '';
+    document.getElementById('cidade').value = '';
+    document.getElementById('votos').value = '0';
+    document.getElementById('liderNome').focus();
+  }
+
+  function fecharModal() {
+    document.getElementById('editModal').style.display = 'none';
+    editandoId = null;
+  }
+
+  function formatarData(data) {
+    return data.toLocaleDateString('pt-BR');
   }
 
   function formatarNumero(num) {
     return new Intl.NumberFormat('pt-BR').format(num);
   }
 
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  function mostrarUrlCompartilhamento() {
+    document.getElementById('shareUrl').textContent = window.location.href;
+  }
+
   function mostrarMensagem(texto, tipo = 'success') {
-    // Remove mensagens existentes
     const existente = document.querySelector('.alert');
-    if (existente) {
-      existente.remove();
-    }
+    if (existente) existente.remove();
 
     const div = document.createElement('div');
     div.className = `alert alert-${tipo}`;
     div.textContent = texto;
     
     const container = document.querySelector('.container');
-    container.insertBefore(div, container.children[1]);
+    container.insertBefore(div, container.children[2]);
     
-    // Remove automaticamente após 5 segundos
     setTimeout(() => {
-      if (div.parentNode) {
-        div.remove();
-      }
+      if (div.parentNode) div.remove();
     }, 5000);
   }
 
@@ -671,289 +581,56 @@
     confirmCallback = null;
   }
 
-  // --------- Funcionalidades Avançadas ---------
-  
-  // Auto-save periódico
-  setInterval(() => {
-    if (lideres.length > 0) {
-      salvarDados();
-    }
-  }, 30000); // A cada 30 segundos
-
-  // Detectar mudanças em outras abas
-  window.addEventListener('storage', (e) => {
-    if (e.key === STORAGE_KEY) {
-      carregarDados();
-      renderizarTabela();
-      mostrarMensagem('🔄 Dados atualizados por outra aba', 'success');
-    }
-  });
-
-  // Shortcuts de teclado
-  document.addEventListener('keydown', (e) => {
-    // Ctrl/Cmd + S = Fazer backup
-    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-      e.preventDefault();
-      fazerBackup();
-    }
-    
-    // Ctrl/Cmd + E = Exportar
-    if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
-      e.preventDefault();
-      exportarDados();
-    }
-    
-    // Escape = Fechar modais
-    if (e.key === 'Escape') {
-      fecharModal();
-      fecharConfirmacao(false);
-    }
-  });
-
-  // Prevenção de perda de dados
-  window.addEventListener('beforeunload', (e) => {
-    salvarDados();
-  });
-
-  // --------- Funcionalidades de Relatório ---------
-  function gerarRelatorio() {
-    const total = lideres.length;
-    const totalVotos = lideres.reduce((s, l) => s + (Number(l.votos) || 0), 0);
-    const cidades = [...new Set(lideres.map(l => l.cidade))];
-    
-    const relatorioPorCidade = cidades.map(cidade => {
-      const lideresCidade = lideres.filter(l => l.cidade === cidade);
-      const votosCidade = lideresCidade.reduce((s, l) => s + (Number(l.votos) || 0), 0);
-      
-      return {
-        cidade,
-        lideres: lideresCidade.length,
-        votos: votosCidade,
-        percentualVotos: total > 0 ? ((votosCidade / totalVotos) * 100).toFixed(1) : 0
+  // --------- Export ---------
+  function exportarDados() {
+    try {
+      const dados = {
+        versao: '3.0-Firebase',
+        exportadoEm: new Date().toISOString(),
+        totalRegistros: lideres.length,
+        lideres: lideres.map(l => ({
+          nome: l.nome,
+          cidade: l.cidade,
+          votos: l.votos,
+          data: l.data
+        }))
       };
-    }).sort((a, b) => b.votos - a.votos);
 
-    return {
-      resumo: {
-        totalLideres: total,
-        totalVotos,
-        totalCidades: cidades.length,
-        mediaVotosPorLider: total > 0 ? Math.round(totalVotos / total) : 0
-      },
-      porCidade: relatorioPorCidade,
-      top5Lideres: [...lideres]
-        .sort((a, b) => (Number(b.votos) || 0) - (Number(a.votos) || 0))
-        .slice(0, 5)
-    };
+      const blob = new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `lideres_votos_firebase_${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      mostrarMensagem('✅ Dados exportados com sucesso!', 'success');
+    } catch (error) {
+      console.error('Erro ao exportar:', error);
+      mostrarMensagem('❌ Erro ao exportar dados', 'error');
+    }
   }
 
-  // --------- Performance e Otimizações ---------
-  
-  // Debounce para busca
-  let timeoutBusca;
-  function filtrarTabelaDebounced() {
-    clearTimeout(timeoutBusca);
-    timeoutBusca = setTimeout(filtrarTabela, 300);
-  }
-
-  // Substituir evento direto por debounced
-  document.addEventListener('DOMContentLoaded', () => {
-    const searchInput = document.getElementById('searchInput');
-    if (searchInput) {
-      searchInput.removeAttribute('onkeyup');
-      searchInput.addEventListener('input', filtrarTabelaDebounced);
+  // --------- Cleanup ---------
+  window.addEventListener('beforeunload', () => {
+    if (unsubscribe) {
+      unsubscribe();
     }
   });
 
-  // Lazy loading para tabelas grandes
-  function renderizarTabelaOtimizada() {
-    const dados = obterDadosFiltrados();
-    const tbody = document.getElementById('tabelaCorpo');
-    const empty = document.getElementById('emptyState');
-    
-    // Se há muitos registros, renderizar em lotes
-    if (dados.length > 100) {
-      renderizarEmLotes(dados, tbody, empty);
-    } else {
-      renderizarTabela();
-    }
-  }
+  // Expor funções globalmente para uso nos event handlers inline
+  window.editarLider = editarLider;
+  window.deletarLider = deletarLider;
+  window.salvarEdicao = salvarEdicao;
+  window.fecharModal = fecharModal;
+  window.fecharConfirmacao = fecharConfirmacao;
 
-  function renderizarEmLotes(dados, tbody, empty, loteSize = 50) {
-    if (!dados.length) {
-      tbody.innerHTML = '';
-      empty.style.display = 'block';
-      return;
-    }
-
-    empty.style.display = 'none';
-    tbody.innerHTML = '';
-    
-    let indice = 0;
-    
-    function renderizarProximoLote() {
-      const fim = Math.min(indice + loteSize, dados.length);
-      const lote = dados.slice(indice, fim);
-      
-      const html = lote.map(l => `
-        <tr>
-          <td><strong>#${l.id}</strong></td>
-          <td><strong style="color:#333">${escapeHtml(l.nome)}</strong></td>
-          <td><span style="color:#666">${escapeHtml(l.cidade)}</span></td>
-          <td style="color:#5b6cee;font-weight:700;font-size:1.1em">${formatarNumero(l.votos||0)}</td>
-          <td style="color:#666;font-size:0.9em">${l.data||'N/A'}</td>
-          <td>
-            <div class="actions">
-              <button class="btn btn-secondary" onclick="editarLider(${l.id})" title="Editar líder">✏️</button>
-              <button class="btn btn-danger" onclick="deletarLider(${l.id})" title="Excluir líder">🗑️</button>
-            </div>
-          </td>
-        </tr>
-      `).join('');
-      
-      tbody.insertAdjacentHTML('beforeend', html);
-      indice = fim;
-      
-      if (indice < dados.length) {
-        // Renderizar próximo lote após um pequeno delay
-        setTimeout(renderizarProximoLote, 10);
-      } else {
-        // Finalizar renderização
-        atualizarEstatisticas();
-        atualizarFiltroCidades();
-      }
-    }
-    
-    renderizarProximoLote();
-  }
-
-  // --------- Validações e Melhorias de UX ---------
-  
-  function validarFormulario() {
-    const nome = document.getElementById('liderNome').value.trim();
-    const cidade = document.getElementById('cidade').value.trim();
-    const votos = document.getElementById('votos').value;
-    
-    // Validação de nome (mínimo 2 caracteres, apenas letras e espaços)
-    if (nome.length < 2) {
-      return { valido: false, erro: 'Nome deve ter pelo menos 2 caracteres' };
-    }
-    
-    if (!/^[a-záàâãéèêíìîóòôõúùûçñ\s]+$/i.test(nome)) {
-      return { valido: false, erro: 'Nome deve conter apenas letras e espaços' };
-    }
-    
-    // Validação de cidade
-    if (cidade.length < 2) {
-      return { valido: false, erro: 'Cidade deve ter pelo menos 2 caracteres' };
-    }
-    
-    // Validação de votos
-    if (votos < 0 || votos > 999999) {
-      return { valido: false, erro: 'Número de votos deve estar entre 0 e 999.999' };
-    }
-    
-    return { valido: true };
-  }
-
-  // Atualizar função adicionarLider para usar validação
-  function adicionarLiderValidado() {
-    const validacao = validarFormulario();
-    
-    if (!validacao.valido) {
-      mostrarMensagem(`❌ ${validacao.erro}`, 'warning');
-      return;
-    }
-    
-    // Se chegou até aqui, continua com a lógica original
-    adicionarLider();
-  }
-
-  // --------- Melhorias de Acessibilidade ---------
-  
-  // Adicionar indicadores visuais de carregamento
-  function mostrarCarregando(elemento, texto = 'Carregando...') {
-    elemento.style.opacity = '0.6';
-    elemento.style.pointerEvents = 'none';
-    
-    const loader = document.createElement('div');
-    loader.className = 'loader';
-    loader.textContent = texto;
-    loader.style.cssText = `
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: rgba(255,255,255,0.9);
-      padding: 10px 20px;
-      border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      z-index: 1000;
-    `;
-    
-    elemento.style.position = 'relative';
-    elemento.appendChild(loader);
-    
-    return () => {
-      elemento.style.opacity = '';
-      elemento.style.pointerEvents = '';
-      if (loader.parentNode) {
-        loader.remove();
-      }
-    };
-  }
-
-  // --------- Estatísticas Avançadas ---------
-  
-  function calcularEstatisticasAvancadas() {
-    if (!lideres.length) return null;
-    
-    const votos = lideres.map(l => Number(l.votos) || 0);
-    const cidades = lideres.reduce((acc, l) => {
-      acc[l.cidade] = (acc[l.cidade] || 0) + 1;
-      return acc;
-    }, {});
-    
-    return {
-      votos: {
-        total: votos.reduce((a, b) => a + b, 0),
-        media: votos.reduce((a, b) => a + b, 0) / votos.length,
-        mediana: calcularMediana(votos),
-        maximo: Math.max(...votos),
-        minimo: Math.min(...votos)
-      },
-      cidades: {
-        total: Object.keys(cidades).length,
-        maisProdutiva: Object.entries(cidades).sort((a, b) => b[1] - a[1])[0],
-        distribuicao: cidades
-      }
-    };
-  }
-  
-  function calcularMediana(arr) {
-    const sorted = [...arr].sort((a, b) => a - b);
-    const meio = Math.floor(sorted.length / 2);
-    return sorted.length % 2 === 0 
-      ? (sorted[meio - 1] + sorted[meio]) / 2 
-      : sorted[meio];
-  }
-
-  // --------- Finalização e Inicialização Melhorada ---------
-  
-  // Garantir que todas as funções estejam prontas
-  window.sistemeLideres = {
-    adicionarLider: adicionarLiderValidado,
-    editarLider,
-    deletarLider,
-    exportarDados,
-    importarDados,
-    fazerBackup,
-    gerarRelatorio,
-    calcularEstatisticasAvancadas
-  };
-
-  console.log('✅ Sistema de Gestão de Líderes e Votos carregado com sucesso!');
-  console.log('📊 Funcionalidades disponíveis:', Object.keys(window.sistemeLideres));
+  console.log('🔥 Sistema Firebase inicializado com sucesso!');
 </script>
 </body>
 </html>
+    
+    

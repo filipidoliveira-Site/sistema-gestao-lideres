@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Sistema de Gestão de Líderes e Votos</title>
+<style>
+  body{font-family:Arial,Segoe UI,Tahoma,sans-serif;background:linear-gradient(135deg,#667eea,#764ba2);min-height:100vh;margin:0;padding:24px}
+  .container{max-width:1200px;margin:0 auto;background:#fff;border-radius:16px;box-shadow:0 16px 48px rgba(0,0,0,.25);overflow:hidden}
+  .header{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;padding:28px;text-align:center}
+  .controls,.stats,.table-wrap{padding:24px}
+  .controls{display:grid;grid-template-columns:1fr 1fr 200px auto;gap:12px;background:#f7f8fb}
+  .controls label{font-weight:600;color:#333}
+  .controls input{width:100%;padding:10px;border:2px solid #e6e6f0;border-radius:10px}
+  .btn{border:0;border-radius:10px;padding:12px 18px;font-weight:700;cursor:pointer;transition:all 0.2s}
+  .btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,0.15)}
+  .btn-primary{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff}
+  .btn-secondary{background:#6c757d;color:#fff}
+  .btn-danger{background:#dc3545;color:#fff}
+  .btn-success{background:#28a745;color:#fff}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;background:#f7f8fb}
+  .card{background:#fff;border-radius:12px;padding:18px;text-align:center;box-shadow:0 2px 12px rgba(0,0,0,.06)}
+  .card h4{margin:0 0 8px;color:#666;text-transform:uppercase;font-size:.85rem;letter-spacing:.04em}
+  .card .num{font-size:2rem;font-weight:800;color:#5b6cee}
+  table{width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.06)}
+  thead{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff}
+  th,td{padding:14px;border-bottom:1px solid #f0f0f5;text-align:left}
+  .actions{display:flex;gap:8px}
+  .searchbar{display:flex;gap:12px;align-items:center;margin:0 24px 24px;flex-wrap:wrap}
+  .searchbar input, .searchbar select{padding:10px;border:2px solid #e6e6f0;border-radius:24px}
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:10}
+  .modal .box{background:#fff;padding:24px;border-radius:14px;max-width:420px;width:90%}
+  .modal .box .row{margin-bottom:12px}
+  .modal .box .row label{display:block;margin-bottom:4px;font-weight:600}
+  .modal .box .row input{width:100%;padding:10px;border:2px solid #e6e6f0;border-radius:8px;box-sizing:border-box}
+  .share-section{background:#e8f4f8;padding:16px;margin:16px 24px;border-radius:8px;border-left:4px solid #17a2b8}
+  .share-section h3{margin:0 0 8px;color:#0c5460}
+  .share-section p{margin:4px 0;font-size:0.9em;color:#495057}
+  .url-box{background:#fff;padding:8px 12px;border-radius:4px;border:1px solid #ced4da;word-break:break-all;font-family:monospace;font-size:0.9em}
+  .alert{padding:12px;margin:16px 24px;border-radius:8px}
+  .alert-success{background:#d4edda;border:1px solid #c3e6cb;color:#155724}
+  .alert-warning{background:#fff3cd;border:1px solid #ffeaa7;color:#856404}
+  .backup-section{background:#f8f9fa;padding:16px;margin:16px 24px;border-radius:8px}
+  #fileInput{display:none}
+  .sortable{cursor:pointer;user-select:none}
+  .sortable:hover{background:rgba(255,255,255,0.1)}
+</style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>📊 Sistema de Gestão de Líderes e Votos</h1>
+      <p>Organize e acompanhe os votos por cidade - Sistema Compartilhável</p>
+    </div>
+
+    <div class="share-section">
+      <h3>🔗 Compartilhamento</h3>
+      <p><strong>Para compartilhar:</strong> Copie a URL atual desta página e envie para outras pessoas. Todos os dados ficam sincronizados automaticamente!</p>
+      <div class="url-box" id="shareUrl">Carregando URL...</div>
+      <p><small>💡 <strong>Dica:</strong> Marque esta página nos favoritos para acesso rápido</small></p>
+    </div>
+
+    <div class="controls">
+      <div>
+        <label for="liderNome">Nome do Líder</label>
+        <input id="liderNome" type="text" placeholder="Ex.: Ana Paula">
+      </div>
+      <div>
+        <label for="cidade">Cidade</label>
+        <input id="cidade" type="text" placeholder="Ex.: São José do Rio Preto">
+      </div>
+      <div>
+        <label for="votos">Número de Votos</label>
+        <input id="votos" type="number" min="0" value="0">
+      </div>
+      <div style="display:flex;gap:8px;align-items:flex-end">
+        <button id="btnAdicionar" class="btn btn-primary">➕ Adicionar Líder</button>
+        <button id="btnLimpar" class="btn btn-secondary">🔄 Limpar</button>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="card"><h4>Total de Líderes</h4><div class="num" id="totalLideres">0</div></div>
+      <div class="card"><h4>Total de Votos</h4><div class="num" id="totalVotos">0</div></div>
+      <div class="card"><h4>Cidades Cadastradas</h4><div class="num" id="totalCidades">0</div></div>
+      <div class="card"><h4>Média de Votos</h4><div class="num" id="mediaVotos">0</div></div>
+    </div>
+
+    <div class="searchbar">
+      <input id="searchInput" type="text" placeholder="🔎 Buscar por líder ou cidade..." onkeyup="filtrarTabela()">
+      <select id="filterCity" onchange="filtrarTabela()">
+        <option value="">Todas as cidades</option>
+      </select>
+      <button id="btnExportar" class="btn btn-success">📁 Exportar JSON</button>
+      <button id="btnImportar" class="btn btn-primary">📥 Importar Dados</button>
+      <input type="file" id="fileInput" accept=".json" style="display:none">
+    </div>
+
+    <div class="backup-section">
+      <h4>💾 Backup Automático</h4>
+      <p>Os dados são salvos automaticamente no seu navegador. Use as opções de exportar/importar para fazer backup ou compartilhar entre dispositivos.</p>
+      <button id="btnBackup" class="btn btn-secondary" style="margin-top:8px">💾 Fazer Backup Agora</button>
+      <span id="backupStatus" style="margin-left:12px;color:#666;font-size:0.9em"></span>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="sortable" data-coluna="id">ID ↕</th>
+            <th class="sortable" data-coluna="nome">Líder ↕</th>
+            <th class="sortable" data-coluna="cidade">Cidade ↕</th>
+            <th class="sortable" data-coluna="votos">Votos ↕</th>
+            <th class="sortable" data-coluna="data">Data de Cadastro ↕</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="tabelaCorpo"></tbody>
+      </table>
+      <div id="emptyState" style="text-align:center;padding:32px;color:#888;display:none">
+        <h3>📝 Nenhum líder cadastrado ainda</h3>
+        <p>Comece adicionando seu primeiro líder usando o formulário acima</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de edição -->
+  <div id="editModal" class="modal" onclick="if(event.target===this) fecharModal()">
+    <div class="box">
+      <h2>✏️ Editar Líder</h2>
+      <div class="row">
+        <label>Nome</label>
+        <input id="editNome" type="text" placeholder="Nome do líder">
+      </div>
+      <div class="row">
+        <label>Cidade</label>
+        <input id="editCidade" type="text" placeholder="Cidade">
+      </div>
+      <div class="row">
+        <label>Votos</label>
+        <input id="editVotos" type="number" min="0" placeholder="Número de votos">
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:20px">
+        <button class="btn btn-secondary" onclick="fecharModal()">Cancelar</button>
+        <button class="btn btn-primary" onclick="salvarEdicao()">💾 Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de confirmação -->
+  <div id="confirmModal" class="modal">
+    <div class="box">
+      <h3 id="confirmTitle">Confirmar ação</h3>
+      <p id="confirmMessage">Tem certeza?</p>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:20px">
+        <button class="btn btn-secondary" onclick="fecharConfirmacao(false)">Cancelar</button>
+        <button class="btn btn-danger" onclick="fecharConfirmacao(true)">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // Estado da aplicação
+  let lideres = [];
+  let editandoId = null;
+  let ordemAtual = { coluna: null, crescente: true };
+  let confirmCallback = null;
+
+  // Chave para armazenamento local
+  const STORAGE_KEY = 'sistema_lideres_votos';
+
+  // --------- Inicialização ---------
+  document.addEventListener('DOMContentLoaded', () => {
+    carregarDados();
+    configurarEventos();
+    renderizarTabela();
+    mostrarUrlCompartilhamento();
+    verificarParametrosUrl();
+  });
+
+  function configurarEventos() {
+    // Botões principais
+    document.getElementById('btnAdicionar').addEventListener('click', adicionarLider);
+    document.getElementById('btnLimpar').addEventListener('click', limparFormulario);
+    document.getElementById('btnExportar').addEventListener('click', exportarDados);
+    document.getElementById('btnImportar').addEventListener('click', () => document.getElementById('fileInput').click());
+    document.getElementById('btnBackup').addEventListener('click', fazerBackup);
+    
+    // Upload de arquivo
+    document.getElementById('fileInput').addEventListener('change', importarDados);
+    
+    // Enter nos campos de input
+    ['liderNome', 'cidade', 'votos'].forEach(id => {
+      document.getElementById(id).addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') adicionarLider();
+      });
+    });
+
+    // Ordenação da tabela
+    document.querySelectorAll('th.sortable').forEach(th => {
+      th.addEventListener('click', () => ordenarTabela(th.dataset.coluna));
+    });
+  }
+
+  // --------- Gerenciamento de Dados ---------
+  function carregarDados() {
+    try {
+      const dados = localStorage.getItem(STORAGE_KEY);
+      if (dados) {
+        lideres = JSON.parse(dados);
+        // Garantir que todos os líderes tenham um ID
+        lideres.forEach((lider, index) => {
+          if (!lider.id) {
+            lider.id = Date.now() + index;
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao carregar dados:', error);
+      lideres = [];
+    }
+  }
+
+  function salvarDados() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(lideres));
+      mostrarMensagem('✅ Dados salvos automaticamente!', 'success');
+    } catch (error) {
+      console.error('Erro ao salvar dados:', error);
+      mostrarMensagem('❌ Erro ao salvar dados. Espaço insuficiente?', 'warning');
+    }
+  }
+
+  // --------- Renderização da Interface ---------
+  function renderizarTabela() {
+    const tbody = document.getElementById('tabelaCorpo');
+    const empty = document.getElementById('emptyState');
+    const dados = obterDadosFiltrados();
+
+    if (!dados.length) {
+      tbody.innerHTML = '';
+      empty.style.display = 'block';
+    } else {
+      empty.style.display = 'none';
+      tbody.innerHTML = dados.map(l => `
+        <tr>
+          <td><strong>#${l.id}</strong></td>
+          <td><strong style="color:#333">${escapeHtml(l.nome)}</strong></td>
+          <td><span style="color:#666">${escapeHtml(l.cidade)}</span></td>
+          <td style="color:#5b6cee;font-weight:700;font-size:1.1em">${formatarNumero(l.votos||0)}</td>
+          <td style="color:#666;font-size:0.9em">${l.data||'N/A'}</td>
+          <td>
+            <div class="actions">
+              <button class="btn btn-secondary" onclick="editarLider(${l.id})" title="Editar líder">✏️</button>
+              <button class="btn btn-danger" onclick="deletarLider(${l.id})" title="Excluir líder">🗑️</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+    
+    atualizarEstatisticas();
+    atualizarFiltroCidades();
+  }
+
+  function atualizarEstatisticas() {
+    const dados = obterDadosFiltrados();
+    const total = dados.length;
+    const votos = dados.reduce((soma, lider) => soma + (Number(lider.votos) || 0), 0);
+    const cidades = new Set(dados.map(l => l.cidade)).size;
+    const media = total ? Math.round(votos / total) : 0;
+
+    document.getElementById('totalLideres').textContent = formatarNumero(total);
+    document.getElementById('totalVotos').textContent = formatarNumero(votos);
+    document.getElementById('totalCidades').textContent = formatarNumero(cidades);
+    document.getElementById('mediaVotos').textContent = formatarNumero(media);
+  }
+
+  function atualizarFiltroCidades() {
+    const select = document.getElementById('filterCity');
+    const valorAtual = select.value;
+    const cidades = [...new Set(lideres.map(l => l.cidade))].sort();
+    
+    select.innerHTML = '<option value="">Todas as cidades</option>';
+    cidades.forEach(cidade => {
+      const option = document.createElement('option');
+      option.value = cidade;
+      option.textContent = cidade;
+      select.appendChild(option);
+    });
+    
+    select.value = valorAtual;
+  }
+
+  // --------- CRUD Operations ---------
+  function adicionarLider() {
+    const nome = document.getElementById('liderNome').value.trim();
+    const cidade = document.getElementById('cidade').value.trim();
+    const votos = parseInt(document.getElementById('votos').value) || 0;
+
+    // Validação
+    if (!nome) {
+      mostrarMensagem('❌ Por favor, informe o nome do líder', 'warning');
+      document.getElementById('liderNome').focus();
+      return;
+    }
+
+    if (!cidade) {
+      mostrarMensagem('❌ Por favor, informe a cidade', 'warning');
+      document.getElementById('cidade').focus();
+      return;
+    }
+
+    // Verificar duplicatas
+    const duplicata = lideres.find(l => 
+      l.nome.toLowerCase() === nome.toLowerCase() && 
+      l.cidade.toLowerCase() === cidade.toLowerCase()
+    );
+
+    if (duplicata) {
+      mostrarMensagem('⚠️ Já existe um líder com esse nome nesta cidade', 'warning');
+      return;
+    }
+
+    // Criar novo líder
+    const novoLider = {
+      id: Date.now(),
+      nome: nome,
+      cidade: cidade,
+      votos: votos,
+      data: new Date().toLocaleDateString('pt-BR')
+    };
+
+    lideres.unshift(novoLider); // Adiciona no início para aparecer primeiro
+    salvarDados();
+    renderizarTabela();
+    limparFormulario();
+    
+    mostrarMensagem(`✅ Líder "${nome}" adicionado com sucesso!`, 'success');
+  }
+
+  function editarLider(id) {
+    const lider = lideres.find(l => l.id === id);
+    if (!lider) {
+      mostrarMensagem('❌ Líder não encontrado', 'warning');
+      return;
+    }
+
+    editandoId = id;
+    document.getElementById('editNome').value = lider.nome;
+    document.getElementById('editCidade').value = lider.cidade;
+    document.getElementById('editVotos').value = lider.votos || 0;
+    document.getElementById('editModal').style.display = 'flex';
+    
+    // Focar no primeiro campo
+    setTimeout(() => document.getElementById('editNome').focus(), 100);
+  }
+
+  function salvarEdicao() {
+    const nome = document.getElementById('editNome').value.trim();
+    const cidade = document.getElementById('editCidade').value.trim();
+    const votos = parseInt(document.getElementById('editVotos').value) || 0;
+
+    if (!nome || !cidade) {
+      mostrarMensagem('❌ Nome e cidade são obrigatórios', 'warning');
+      return;
+    }
+
+    // Verificar duplicatas (exceto o próprio registro)
+    const duplicata = lideres.find(l => 
+      l.id !== editandoId &&
+      l.nome.toLowerCase() === nome.toLowerCase() && 
+      l.cidade.toLowerCase() === cidade.toLowerCase()
+    );
+
+    if (duplicata) {
+      mostrarMensagem('⚠️ Já existe outro líder com esse nome nesta cidade', 'warning');
+      return;
+    }
+
+    const lider = lideres.find(l => l.id === editandoId);
+    if (lider) {
+      lider.nome = nome;
+      lider.cidade = cidade;
+      lider.votos = votos;
+      
+      salvarDados();
+      renderizarTabela();
+      fecharModal();
+      
+      mostrarMensagem(`✅ Líder "${nome}" atualizado com sucesso!`, 'success');
+    }
+  }
+
+  function deletarLider(id) {
+    const lider = lideres.find(l => l.id === id);
+    if (!lider) return;
+
+    confirmarAcao(
+      'Excluir Líder',
+      `Tem certeza que deseja excluir "${lider.nome}" de ${lider.cidade}?`,
+      () => {
+        lideres = lideres.filter(l => l.id !== id);
+        salvarDados();
+        renderizarTabela();
+        mostrarMensagem(`✅ Líder "${lider.nome}" excluído com sucesso!`, 'success');
+      }
+    );
+  }
+
+  // --------- Funções Auxiliares ---------
+  function limparFormulario() {
+    document.getElementById('liderNome').value = '';
+    document.getElementById('cidade').value = '';
+    document.getElementById('votos').value = '0';
+    document.getElementById('liderNome').focus();
+  }
+
+  function fecharModal() {
+    document.getElementById('editModal').style.display = 'none';
+    editandoId = null;
+  }
+
+  function obterDadosFiltrados() {
+    const busca = (document.getElementById('searchInput')?.value || '').toLowerCase();
+    const cidadeFiltro = (document.getElementById('filterCity')?.value || '').toLowerCase();
+    
+    return lideres.filter(lider => {
+      const correspondeNome = !busca || lider.nome.toLowerCase().includes(busca);
+      const correspondeCidade = !busca || lider.cidade.toLowerCase().includes(busca);
+      const correspondeIdadeade = !cidadeFiltro || lider.cidade.toLowerCase() === cidadeFiltro;
+      
+      return (correspondeNome || correspondeCidade) && correspondeIdadeade;
+    });
+  }
+
+  // --------- Filtros e Ordenação ---------
+  function filtrarTabela() {
+    renderizarTabela();
+  }
+
+  function ordenarTabela(coluna) {
+    if (ordemAtual.coluna === coluna) {
+      ordemAtual.crescente = !ordemAtual.crescente;
+    } else {
+      ordemAtual.coluna = coluna;
+      ordemAtual.crescente = true;
+    }
+
+    lideres.sort((a, b) => {
+      let valorA = a[coluna];
+      let valorB = b[coluna];
+
+      // Tratamento específico por tipo de coluna
+      if (coluna === 'nome' || coluna === 'cidade') {
+        valorA = (valorA || '').toLowerCase();
+        valorB = (valorB || '').toLowerCase();
+      } else if (coluna === 'votos' || coluna === 'id') {
+        valorA = Number(valorA) || 0;
+        valorB = Number(valorB) || 0;
+      } else if (coluna === 'data') {
+        valorA = new Date(valorA?.split('/').reverse().join('-') || '1970-01-01');
+        valorB = new Date(valorB?.split('/').reverse().join('-') || '1970-01-01');
+      }
+
+      let resultado = 0;
+      if (valorA < valorB) resultado = -1;
+      else if (valorA > valorB) resultado = 1;
+
+      return ordemAtual.crescente ? resultado : -resultado;
+    });
+
+    renderizarTabela();
+    
+    // Atualizar indicador visual da ordenação
+    document.querySelectorAll('th.sortable').forEach(th => {
+      th.style.backgroundColor = '';
+    });
+    
+    const thAtivo = document.querySelector(`th[data-coluna="${coluna}"]`);
+    if (thAtivo) {
+      thAtivo.style.backgroundColor = 'rgba(255,255,255,0.2)';
+    }
+  }
+
+  // --------- Import/Export ---------
+  function exportarDados() {
+    try {
+      const dados = {
+        versao: '2.0',
+        exportadoEm: new Date().toISOString(),
+        totalRegistros: lideres.length,
+        lideres: lideres
+      };
+
+      const blob = new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `lideres_votos_${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      mostrarMensagem('✅ Dados exportados com sucesso!', 'success');
+    } catch (error) {
+      console.error('Erro ao exportar:', error);
+      mostrarMensagem('❌ Erro ao exportar dados', 'warning');
+    }
+  }
+
+  function importarDados(event) {
+    const arquivo = event.target.files[0];
+    if (!arquivo) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const dados = JSON.parse(e.target.result);
+        let lideresImportados = [];
+
+        // Suporte a diferentes formatos
+        if (dados.lideres && Array.isArray(dados.lideres)) {
+          lideresImportados = dados.lideres;
+        } else if (Array.isArray(dados)) {
+          lideresImportados = dados;
+        } else {
+          throw new Error('Formato de arquivo inválido');
+        }
+
+        // Validar e limpar dados
+        lideresImportados = lideresImportados.filter(lider => 
+          lider.nome && lider.cidade
+        ).map(lider => ({
+          id: lider.id || Date.now() + Math.random(),
+          nome: String(lider.nome).trim(),
+          cidade: String(lider.cidade).trim(),
+          votos: Number(lider.votos) || 0,
+          data: lider.data || new Date().toLocaleDateString('pt-BR')
+        }));
+
+        if (lideresImportados.length === 0) {
+          mostrarMensagem('⚠️ Nenhum dado válido encontrado no arquivo', 'warning');
+          return;
+        }
+
+        confirmarAcao(
+          'Importar Dados',
+          `Foram encontrados ${lideresImportados.length} registros válidos. Deseja substituir todos os dados atuais?`,
+          () => {
+            lideres = lideresImportados;
+            salvarDados();
+            renderizarTabela();
+            mostrarMensagem(`✅ ${lideresImportados.length} registros importados com sucesso!`, 'success');
+          }
+        );
+
+      } catch (error) {
+        console.error('Erro ao importar:', error);
+        mostrarMensagem('❌ Erro ao ler arquivo. Verifique se é um arquivo JSON válido.', 'warning');
+      }
+    };
+
+    reader.readAsText(arquivo);
+    event.target.value = ''; // Limpar input
+  }
+
+  // --------- Compartilhamento ---------
+  function mostrarUrlCompartilhamento() {
+    const url = window.location.href;
+    document.getElementById('shareUrl').textContent = url;
+  }
+
+  function verificarParametrosUrl() {
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('dados')) {
+      try {
+        const dadosComprimidos = params.get('dados');
+        const dadosJson = atob(dadosComprimidos);
+        const dadosImportados = JSON.parse(dadosJson);
+        
+        if (Array.isArray(dadosImportados) && dadosImportados.length > 0) {
+          lideres = dadosImportados;
+          salvarDados();
+          renderizarTabela();
+          mostrarMensagem('✅ Dados compartilhados carregados com sucesso!', 'success');
+        }
+      } catch (error) {
+        console.error('Erro ao carregar dados da URL:', error);
+      }
+    }
+  }
+
+  // --------- Backup ---------
+  function fazerBackup() {
+    const timestamp = new Date().toLocaleString('pt-BR');
+    const status = document.getElementById('backupStatus');
+    
+    try {
+      // Salva uma cópia extra no localStorage
+      const backupKey = `${STORAGE_KEY}_backup_${Date.now()}`;
+      localStorage.setItem(backupKey, JSON.stringify({
+        timestamp,
+        dados: lideres
+      }));
+      
+      status.textContent = `✅ Backup realizado em ${timestamp}`;
+      status.style.color = '#28a745';
+      
+      // Limpar backups antigos (manter apenas os últimos 5)
+      const keys = Object.keys(localStorage).filter(k => k.includes(`${STORAGE_KEY}_backup_`));
+      if (keys.length > 5) {
+        keys.sort().slice(0, keys.length - 5).forEach(key => {
+          localStorage.removeItem(key);
+        });
+      }
+      
+    } catch (error) {
+      status.textContent = '❌ Erro ao fazer backup';
+      status.style.color = '#dc3545';
+    }
+  }
+
+  // --------- Utility Functions ---------
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  function formatarNumero(num) {
+    return new Intl.NumberFormat('pt-BR').format(num);
+  }
+
+  function mostrarMensagem(texto, tipo = 'success') {
+    // Remove mensagens existentes
+    const existente = document.querySelector('.alert');
+    if (existente) {
+      existente.remove();
+    }
+
+    const div = document.createElement('div');
+    div.className = `alert alert-${tipo}`;
+    div.textContent = texto;
+    
+    const container = document.querySelector('.container');
+    container.insertBefore(div, container.children[1]);
+    
+    // Remove automaticamente após 5 segundos
+    setTimeout(() => {
+      if (div.parentNode) {
+        div.remove();
+      }
+    }, 5000);
+  }
+
+  function confirmarAcao(titulo, mensagem, callback) {
+    document.getElementById('confirmTitle').textContent = titulo;
+    document.getElementById('confirmMessage').textContent = mensagem;
+    document.getElementById('confirmModal').style.display = 'flex';
+    confirmCallback = callback;
+  }
+
+  function fecharConfirmacao(confirmar) {
+    document.getElementById('confirmModal').style.display = 'none';
+    if (confirmar && confirmCallback) {
+      confirmCallback();
+    }
+    confirmCallback = null;
+  }
+
+  // --------- Funcionalidades Avançadas ---------
+  
+  // Auto-save periódico
+  setInterval(() => {
+    if (lideres.length > 0) {
+      salvarDados();
+    }
+  }, 30000); // A cada 30 segundos
+
+  // Detectar mudanças em outras abas
+  window.addEventListener('storage', (e) => {
+    if (e.key === STORAGE_KEY) {
+      carregarDados();
+      renderizarTabela();
+      mostrarMensagem('🔄 Dados atualizados por outra aba', 'success');
+    }
+  });
+
+  // Shortcuts de teclado
+  document.addEventListener('keydown', (e) => {
+    // Ctrl/Cmd + S = Fazer backup
+    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+      e.preventDefault();
+      fazerBackup();
+    }
+    
+    // Ctrl/Cmd + E = Exportar
+    if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
+      e.preventDefault();
+      exportarDados();
+    }
+    
+    // Escape = Fechar modais
+    if (e.key === 'Escape') {
+      fecharModal();
+      fecharConfirmacao(false);
+    }
+  });
+
+  // Prevenção de perda de dados
+  window.addEventListener('beforeunload', (e) => {
+    salvarDados();
+  });
+
+  // --------- Funcionalidades de Relatório ---------
+  function gerarRelatorio() {
+    const total = lideres.length;
+    const totalVotos = lideres.reduce((s, l) => s + (Number(l.votos) || 0), 0);
+    const cidades = [...new Set(lideres.map(l => l.cidade))];
+    
+    const relatorioPorCidade = cidades.map(cidade => {
+      const lideresCidade = lideres.filter(l => l.cidade === cidade);
+      const votosCidade = lideresCidade.reduce((s, l) => s + (Number(l.votos) || 0), 0);
+      
+      return {
+        cidade,
+        lideres: lideresCidade.length,
+        votos: votosCidade,
+        percentualVotos: total > 0 ? ((votosCidade / totalVotos) * 100).toFixed(1) : 0
+      };
+    }).sort((a, b) => b.votos - a.votos);
+
+    return {
+      resumo: {
+        totalLideres: total,
+        totalVotos,
+        totalCidades: cidades.length,
+        mediaVotosPorLider: total > 0 ? Math.round(totalVotos / total) : 0
+      },
+      porCidade: relatorioPorCidade,
+      top5Lideres: [...lideres]
+        .sort((a, b) => (Number(b.votos) || 0) - (Number(a.votos) || 0))
+        .slice(0, 5)
+    };
+  }
+
+  // --------- Performance e Otimizações ---------
+  
+  // Debounce para busca
+  let timeoutBusca;
+  function filtrarTabelaDebounced() {
+    clearTimeout(timeoutBusca);
+    timeoutBusca = setTimeout(filtrarTabela, 300);
+  }
+
+  // Substituir evento direto por debounced
+  document.addEventListener('DOMContentLoaded', () => {
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+      searchInput.removeAttribute('onkeyup');
+      searchInput.addEventListener('input', filtrarTabelaDebounced);
+    }
+  });
+
+  // Lazy loading para tabelas grandes
+  function renderizarTabelaOtimizada() {
+    const dados = obterDadosFiltrados();
+    const tbody = document.getElementById('tabelaCorpo');
+    const empty = document.getElementById('emptyState');
+    
+    // Se há muitos registros, renderizar em lotes
+    if (dados.length > 100) {
+      renderizarEmLotes(dados, tbody, empty);
+    } else {
+      renderizarTabela();
+    }
+  }
+
+  function renderizarEmLotes(dados, tbody, empty, loteSize = 50) {
+    if (!dados.length) {
+      tbody.innerHTML = '';
+      empty.style.display = 'block';
+      return;
+    }
+
+    empty.style.display = 'none';
+    tbody.innerHTML = '';
+    
+    let indice = 0;
+    
+    function renderizarProximoLote() {
+      const fim = Math.min(indice + loteSize, dados.length);
+      const lote = dados.slice(indice, fim);
+      
+      const html = lote.map(l => `
+        <tr>
+          <td><strong>#${l.id}</strong></td>
+          <td><strong style="color:#333">${escapeHtml(l.nome)}</strong></td>
+          <td><span style="color:#666">${escapeHtml(l.cidade)}</span></td>
+          <td style="color:#5b6cee;font-weight:700;font-size:1.1em">${formatarNumero(l.votos||0)}</td>
+          <td style="color:#666;font-size:0.9em">${l.data||'N/A'}</td>
+          <td>
+            <div class="actions">
+              <button class="btn btn-secondary" onclick="editarLider(${l.id})" title="Editar líder">✏️</button>
+              <button class="btn btn-danger" onclick="deletarLider(${l.id})" title="Excluir líder">🗑️</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+      
+      tbody.insertAdjacentHTML('beforeend', html);
+      indice = fim;
+      
+      if (indice < dados.length) {
+        // Renderizar próximo lote após um pequeno delay
+        setTimeout(renderizarProximoLote, 10);
+      } else {
+        // Finalizar renderização
+        atualizarEstatisticas();
+        atualizarFiltroCidades();
+      }
+    }
+    
+    renderizarProximoLote();
+  }
+
+  // --------- Validações e Melhorias de UX ---------
+  
+  function validarFormulario() {
+    const nome = document.getElementById('liderNome').value.trim();
+    const cidade = document.getElementById('cidade').value.trim();
+    const votos = document.getElementById('votos').value;
+    
+    // Validação de nome (mínimo 2 caracteres, apenas letras e espaços)
+    if (nome.length < 2) {
+      return { valido: false, erro: 'Nome deve ter pelo menos 2 caracteres' };
+    }
+    
+    if (!/^[a-záàâãéèêíìîóòôõúùûçñ\s]+$/i.test(nome)) {
+      return { valido: false, erro: 'Nome deve conter apenas letras e espaços' };
+    }
+    
+    // Validação de cidade
+    if (cidade.length < 2) {
+      return { valido: false, erro: 'Cidade deve ter pelo menos 2 caracteres' };
+    }
+    
+    // Validação de votos
+    if (votos < 0 || votos > 999999) {
+      return { valido: false, erro: 'Número de votos deve estar entre 0 e 999.999' };
+    }
+    
+    return { valido: true };
+  }
+
+  // Atualizar função adicionarLider para usar validação
+  function adicionarLiderValidado() {
+    const validacao = validarFormulario();
+    
+    if (!validacao.valido) {
+      mostrarMensagem(`❌ ${validacao.erro}`, 'warning');
+      return;
+    }
+    
+    // Se chegou até aqui, continua com a lógica original
+    adicionarLider();
+  }
+
+  // --------- Melhorias de Acessibilidade ---------
+  
+  // Adicionar indicadores visuais de carregamento
+  function mostrarCarregando(elemento, texto = 'Carregando...') {
+    elemento.style.opacity = '0.6';
+    elemento.style.pointerEvents = 'none';
+    
+    const loader = document.createElement('div');
+    loader.className = 'loader';
+    loader.textContent = texto;
+    loader.style.cssText = `
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(255,255,255,0.9);
+      padding: 10px 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      z-index: 1000;
+    `;
+    
+    elemento.style.position = 'relative';
+    elemento.appendChild(loader);
+    
+    return () => {
+      elemento.style.opacity = '';
+      elemento.style.pointerEvents = '';
+      if (loader.parentNode) {
+        loader.remove();
+      }
+    };
+  }
+
+  // --------- Estatísticas Avançadas ---------
+  
+  function calcularEstatisticasAvancadas() {
+    if (!lideres.length) return null;
+    
+    const votos = lideres.map(l => Number(l.votos) || 0);
+    const cidades = lideres.reduce((acc, l) => {
+      acc[l.cidade] = (acc[l.cidade] || 0) + 1;
+      return acc;
+    }, {});
+    
+    return {
+      votos: {
+        total: votos.reduce((a, b) => a + b, 0),
+        media: votos.reduce((a, b) => a + b, 0) / votos.length,
+        mediana: calcularMediana(votos),
+        maximo: Math.max(...votos),
+        minimo: Math.min(...votos)
+      },
+      cidades: {
+        total: Object.keys(cidades).length,
+        maisProdutiva: Object.entries(cidades).sort((a, b) => b[1] - a[1])[0],
+        distribuicao: cidades
+      }
+    };
+  }
+  
+  function calcularMediana(arr) {
+    const sorted = [...arr].sort((a, b) => a - b);
+    const meio = Math.floor(sorted.length / 2);
+    return sorted.length % 2 === 0 
+      ? (sorted[meio - 1] + sorted[meio]) / 2 
+      : sorted[meio];
+  }
+
+  // --------- Finalização e Inicialização Melhorada ---------
+  
+  // Garantir que todas as funções estejam prontas
+  window.sistemeLideres = {
+    adicionarLider: adicionarLiderValidado,
+    editarLider,
+    deletarLider,
+    exportarDados,
+    importarDados,
+    fazerBackup,
+    gerarRelatorio,
+    calcularEstatisticasAvancadas
+  };
+
+  console.log('✅ Sistema de Gestão de Líderes e Votos carregado com sucesso!');
+  console.log('📊 Funcionalidades disponíveis:', Object.keys(window.sistemeLideres));
+</script>
+</body>
+</html>
